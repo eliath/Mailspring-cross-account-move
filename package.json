@@ -1,5 +1,5 @@
 {
-  "name": "sample",
+  "name": "mailspring-cross-account-move",
   "main": "./lib/main",
   "version": "0.1.0",
   "repository": {
@@ -7,16 +7,20 @@
     "url": ""
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "package": "bash scripts/package-release.sh",
+    "test": "npm run build && node test/destinations-test.js && node test/imap-config-test.js && node test/transfer-test.js"
   },
   "engines": {
-    "mailspring": ">=1.6.3"
+    "mailspring": ">=1.24.1"
   },
   "windowTypes": {
-    "default": true,
-    "composer": true
+    "default": true
   },
-  "description": "Enter a description of your package!",
+  "description": "Move messages between Mailspring IMAP accounts.",
+  "dependencies": {
+    "imapflow": "1.7.8"
+  },
   "devDependencies": {
     "@types/react": "^16.7.22",
     "typescript": "^3.6.3"

@@ -1,6 +1,36 @@
 @import "ui-variables";
-@import "ui-mixins";
 
-.my-package .btn {
-  
+.cross-account-move-icon {
+  fill: none;
+  stroke: @btn-default-text-color;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.1;
+  vertical-align: middle;
+}
+
+.cross-account-move-picker {
+  width: 320px;
+
+  &.moving {
+    padding: 24px;
+    text-align: center;
+
+    .spinner-container {
+      height: 24px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .destination {
+      color: @text-color-subtle;
+      margin-top: 4px;
+    }
+  }
+
+  .account {
+    color: @text-color-subtle;
+    float: right;
+    margin-left: 20px;
+  }
 }

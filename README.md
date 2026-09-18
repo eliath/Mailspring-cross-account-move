@@ -1,50 +1,88 @@
-## Mailspring Plugin Starter
+# Mailspring cross-account move
 
-This folder contains a sample plugin for Mailspring that adds components to the composer's "action bar" and the right sidebar shown in the message viewer.
+This Mailspring plugin moves selected conversations to a folder in another
+IMAP account, including moves between Gmail and password-based IMAP accounts.
 
-## Building a Plugin
+The plugin adds a **Move to another account** button to the thread toolbar.
+Select one or more conversations, click the button, and choose a destination
+folder. The picker searches both account names and folder names.
 
-Copy or symlink this project into `~/Library/Application Support/Mailspring/packages` on MacOS, or the corresponding location on Windows and Linux. (You can find this directory by going to _Developer > Show Mailsync Logs_ in Mailspring).
+## Install
 
-You can rename this directory and change the `name` field of `package.json` to rename your plugin. Keep in mind that plugins are like node modules and the names cannot contain spaces!
+1. Download the zip from the [GitHub Releases page](https://github.com/eliath/Mailspring-cross-account-move/releases/latest).
+2. Extract the zip
+3. In Mailspring, **Developer > Install a Plugin...**.
+4. Select the extracted `mailspring-cross-account-move` folder
 
-To get started, run `npm install` in your plugin's directory and then `npm run-script build` to compile the `src` folder into the `lib` folder. To see your changes in Mailspring, quit and relaunch the app OR open the developer tools and reload the app's main window.
+To update, follow the install steps and restart Mailspring.
 
-For documentation of how to build plugins, check out [https://foundry376.github.io/Mailspring/](https://foundry376.github.io/Mailspring/) for (slightly outdated) information and also have a look at the many plugins that ship within the core app: [https://github.com/Foundry376/Mailspring/tree/master/app/internal_packages](https://github.com/Foundry376/Mailspring/tree/master/app/internal_packages). Some of the bundled plugins, like `composer-translate`, `composer-templates`, and `phishing-detection` are great starting points!
+## Safety
 
-## Mailspring-specific package.json Options
+The plugin downloads each source message as an RFC 2822 `.eml` file and appends
+it to the destination folder. It moves the source conversation to Trash only
+after the destination server accepts every message. Mailspring's Undo action
+restores the source first, then removes the exact copies created at the
+destination.
 
-### `windowTypes`
+If an export or append fails, the source stays in place and the plugin removes
+any partial destination copies. The plugin deletes its temporary `.eml` files
+after each attempt.
 
-The `windowTypes` field controls which Mailspring windows your plugin is loaded into. Each key is a window type and the value should be `true` to opt in. Available window types:
+## Requirements
 
-- `default` — the primary application window (mail list, message viewer, sidebar, etc.)
-- `composer` — the composer window when composing a new message
-- `thread-popout` — a thread viewed in its own separate window
-- `calendar` — the freestanding calendar window
+- Mailspring 1.24.1 or later
+- A Gmail or password-based destination IMAP account with UIDPLUS support
+- Node.js and npm to build from source
 
-If `windowTypes` is omitted, the plugin will not be loaded in any window. Most plugins only need `default`; only include additional window types if your plugin registers components or functionality relevant to those windows.
+Microsoft OAuth destination accounts are not supported.
 
-### `syncInit`
+## Install from source
 
-By default, Mailspring delays loading plugins by ~2 seconds after launch so that the core UI can appear quickly. Setting `syncInit: true` in your `package.json` causes the plugin to activate immediately on startup instead:
+1. Run `npm install`.
+2. Run `npm test`.
+3. In Mailspring, select **Developer > Install a Plugin...**.
+4. Select this repository folder.
+5. Restart Mailspring.
 
-```json
-"syncInit": true
+Mailspring loads the compiled files in `lib`. Keep `node_modules` beside the
+plugin when you install or copy it because `imapflow` performs the destination
+IMAP append.
+
+## Build a release
+
+Run:
+
+```sh
+npm run package
 ```
 
-Use this only if your plugin must be active before the UI is usable (for example, if it registers a data store or API that other components depend on at startup). Unnecessary use of `syncInit` will slow down Mailspring's launch time.
+The command creates an installable folder and a GitHub release archive:
 
-## Shipping a Plugin
+```text
+dist/mailspring-cross-account-move/
+dist/mailspring-cross-account-move-<version>.zip
+```
 
-Mailspring does not transpile the source code in your plugin when it runs - it expects that your JSX files, TypeScript, etc. has already been converted to plain ES2017 JavaScript. To give your plugin to other people, you should commit the `lib` directory so that they can download the repository, put it in place via the "Install a Plugin..." menu item in Mailspring, and be done.
+The bundle contains the compiled plugin and its runtime dependencies. It does
+not contain `.git`, the source files, the tests, or the development packages.
+To install the ZIP, extract it and select the extracted plugin folder from
+**Developer > Install a Plugin...**.
 
-## Future
+## Keyboard shortcut
 
-In the next year or so, we'll be launching a first-class "plugin gallery" in Mailspring and formalizing the development and release processes. Right now, building a plugin using TypeScript is a real pain because Mailspring - while written in TypeScript - doesn't export the types for you to build against. Stay tuned!
+The plugin does not set a default keyboard shortcut. To add one, select
+**Preferences > Shortcuts > Edit custom shortcuts** and add the command to your
+keymap:
 
-## A note about Node Modules
+```json
+{
+  "mailspring-cross-account-move:open-picker": "mod+alt+m"
+}
+```
 
-Right now, if your plugin depends on external node modules (say, a CSV parser like `node-csv`), you'd need to package up a zip file that contained those modules already installed in `node_modules`, or have your users run `npm install`. In the future, Mailspring will run npm install for you.
+Replace `mod+alt+m` with your preferred shortcut. `mod` is Command on macOS and
+Ctrl on Linux and Windows.
 
-However, we do not plan to support Mailspring plugins that require _native_ node modules - the kind that compile C++ or C code into platform-specific binaries. It's really hard to ship all of the tooling required to build these reliably, pre-packing them for each platform is annoying, and they often break when the node / nan versions change. Be warned! (An example of this would be `sqlite` or something like `node-addressbook`. You can often tell if a module contains native code if there is a `binding.gyp` file or if the install process takes a while and calls out to `make` or `gcc`.)
+## Development
+
+Run `npm run build` after you change a file in `src`.
